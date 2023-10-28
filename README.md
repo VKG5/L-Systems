@@ -43,4 +43,7 @@ The whole tool has been written in Python, on the Blender Python API. There are 
   <img src="/Images/Code.png" width="512" title="Sample Code = Comments and Modular (Funtions)"> 
 </p>
 
+## Demo Video:
+[<img src="https://img.youtube.com/vi/1C7roLeTzXY/hqdefault.jpg" height="300"/>](https://www.youtube.com/embed/1C7roLeTzXY)
+
 ### NOTE : THIS IS STILL A WIP. You are free to make changes and use it as and when necessary. Don't forget to give credits where necessary!
