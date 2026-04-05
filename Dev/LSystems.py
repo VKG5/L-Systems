@@ -11,20 +11,20 @@ from . import LSystemsMeshGen as lsystemsGen
 def generate(sentence, generations, rules):
     # Number of generations/iterations loop
     for i in range(generations):
-        # Creating a temporary string
-        temp = ""
+        # Creating a temporary list for efficient string building (O(n) instead of O(n²))
+        temp = []
         
         # The sentence loop     
         for j in range(len(sentence)):
             # Error handling to prevent errors
             if(sentence[j] in rules):
-                # Updating the string
-                temp = temp + rules[sentence[j]]
+                # Appending the replacement
+                temp.append(rules[sentence[j]])
             
             else:
-                temp = temp + sentence[j]
+                temp.append(sentence[j])
                             
-        sentence = temp
+        sentence = ''.join(temp)
         
     return sentence
 
