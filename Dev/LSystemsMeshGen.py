@@ -32,6 +32,9 @@ def generateMesh(str, length, rads):
     # Resetting the vertex selection to origin
     getVertices.selectVertexIndex(obj, 0)
     
+    # Initialize BMesh context for efficient mesh operations
+    getVertices.initMeshContext(obj)
+    
     ## Variable for storing the current angle
     currA = 0
     
