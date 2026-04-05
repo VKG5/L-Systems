@@ -37,28 +37,23 @@ def getCurrVert(obj):
     # In case no vertex is active/selected
     return None
 
-## Selecting a particular vertex (optimized - single mode operation)
+## Selecting a particular vertex (robust synchronization with Blender)
 def selectVertexIndex(obj, index):
-    """Select vertex by index - operates in EDIT mode to avoid mode switching"""
+    """Select vertex by index with proper Blender state synchronization"""
     # Ensure vertex selection mode is active
     bpy.ops.mesh.select_mode(type = 'VERT')
     
-    # Get BMesh reference (assumes we're in EDIT mode via caller)
-    if obj.mode != 'EDIT':
-        setMode(obj, 'EDIT')
+    # Deselect all in current mode
+    bpy.ops.mesh.select_all(action = 'DESELECT')
     
-    bm = bmesh.from_edit_mesh(obj.data)
+    # Switch to OBJECT mode to select vertex (properly syncs with Blender)
+    setMode(obj, 'OBJECT')
     
-    # Deselect all vertices using BMesh (more efficient than bpy.ops)
-    for vert in bm.verts:
-        vert.select = False
+    # Select the target vertex in OBJECT mode (reliable synchronization)
+    obj.data.vertices[index].select = True
     
-    # Select the target vertex by index using BMesh (avoids mode switch)
-    bm.verts.ensure_lookup_table()
-    bm.verts[index].select = True
-    
-    # Update mesh (required when modifying BMesh directly)
-    bmesh.update_edit_mesh(obj.data)
+    # Switch back to EDIT mode for continued mesh operations
+    setMode(obj, 'EDIT')
     
     ## Debugging
     #print("Selected vertex %d" % index)

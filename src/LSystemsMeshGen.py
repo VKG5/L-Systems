@@ -32,9 +32,6 @@ def generateMesh(str, length, rads):
     # Resetting the vertex selection to origin
     getVertices.selectVertexIndex(obj, 0)
     
-    # Initialize BMesh context for efficient mesh operations
-    getVertices.initMeshContext(obj)
-    
     ## Variable for storing the current angle
     currA = 0
     
@@ -61,19 +58,17 @@ def generateMesh(str, length, rads):
                 #print("Subtracting Angle")
                 
             elif(str[i]=='['):
-                # Pushing the current vertex index and angle to stack (O(1) instead of O(n) with getCurrVert)
-                indexLs.append((currVertIdx, currA))
+                # Pushing the current vertex index and angle to stack
+                indexLs.append((getVertices.getCurrVert(obj), currA))
                 
             elif(str[i]==']'):
                 # Removing the last element (vertex index and angle from stack)
                 vert, flag = cpop(indexLs)
                 
                 if(flag):
-                    ## Restore vertex and angle from stack
-                    currVertIdx = vert[0]
+                    ## Selecting the required vertex
+                    getVertices.selectVertexIndex(obj, vert[0])
                     currA = vert[1]
-                    # Restore active vertex selection (single mode operation)
-                    getVertices.selectVertexIndex(obj, currVertIdx)
                         
             elif(str[i]=='X'):
                 continue
@@ -87,8 +82,8 @@ def generateMesh(str, length, rads):
                 ## TODO : DETERMINE AXIS
                 bpy.ops.mesh.extrude_region_move(TRANSFORM_OT_translate={"value":(x, y, z)})
                 
-                # Incrementing vertex index (new vertex created by extrude)
-                currVertIdx += 1
+                # Get the actual currently selected vertex after extrude
+                currVertIdx = getVertices.getCurrVert(obj)
                 
         bpy.ops.mesh.select_all(action = 'SELECT')
         
