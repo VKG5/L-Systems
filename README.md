@@ -4,7 +4,7 @@ This is an add-on for Lindenmayer systems within Blender. The add-on creates fra
 ## User Interface
 <!-- Adding an image -->
 <p align="center">
-  <img src="/Images/L-System%231.png" width="512" title="User Interface"> 
+  <img src="/images/L-System%231.png" width="512" title="User Interface"> 
 </p>
 
 The user interface provides simple to understand, self-explanatory briefs about how to use the tool. The list of supported grammar is given below:
@@ -21,7 +21,7 @@ The user interface provides simple to understand, self-explanatory briefs about 
 ## Samples
 <!-- Adding an image -->
 <p align="center">
-  <img src="/Images/L-System%232.png" width="512" title="Samples"> 
+  <img src="/images/L-System%232.png" width="512" title="Samples"> 
 </p>
 
 There are a bunch of sample curves/systems that can be generated. These should help you get started with the tool and give you a basic idea about the working. For further details and study, please refer to [learn](https://en.wikipedia.org/wiki/L-system). A few eamples of generated patterns can be found down below.
@@ -29,10 +29,10 @@ There are a bunch of sample curves/systems that can be generated. These should h
 ## Samples
 <!-- Adding an image -->
 <p align="center">
-  <img src="/Images/KochCurve.png" width="512" title="A Koch Curve"> 
-  <img src="/Images/KochSnowflake.png" width="512" title="Snowflake"> 
-  <img src="/Images/DragonCurve.png" width="512" title="A curve representing a dragon"> 
-  <img src="/Images/FractalPlant.png" width="512" title="Fractal Plant - 2D Tree/Fern"> 
+  <img src="/images/KochCurve.png" width="512" title="A Koch Curve"> 
+  <img src="/images/KochSnowflake.png" width="512" title="Snowflake"> 
+  <img src="/images/DragonCurve.png" width="512" title="A curve representing a dragon"> 
+  <img src="/images/FractalPlant.png" width="512" title="Fractal Plant - 2D Tree/Fern"> 
 </p>
 
 ## Code
@@ -40,7 +40,7 @@ The whole tool has been written in Python, on the Blender Python API. There are 
 
 <!-- Adding an image -->
 <p align="center">
-  <img src="/Images/Code.png" width="512" title="Sample Code = Comments and Modular (Funtions)"> 
+  <img src="/images/Code.png" width="512" title="Sample Code = Comments and Modular (Funtions)"> 
 </p>
 
 ## Demo Video:
