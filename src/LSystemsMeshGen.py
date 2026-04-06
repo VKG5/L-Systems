@@ -1,98 +1,106 @@
 import bpy
-import bpy
+import bmesh
 import math
-       
-from . import GetVertices as getVertices
-#getVertices = bpy.data.texts["getVertices.py"].as_module()
 
-def cpop(ls):
-    try:
-        return ls.pop(), True
-        
-    except IndexError:
-        return [], False
+def show_message(message="", title="Info", icon='INFO'):
+    def draw(self, context):
+        self.layout.label(text=message)
+
+    bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
 
 ## For generating the actual mesh
-def generateMesh(str, length, rads):
-    ## Setting the correct mode
-    getVertices.setMode(bpy.context.active_object, 'OBJECT')
-
-    # Selecting object        
-    obj = getVertices.getCurrObj()
-
-    # Toggling Edit Mode (single mode switch at start)
-    getVertices.setMode(obj, 'EDIT')
-
-    # Selecting all
-    bpy.ops.mesh.select_all(action = 'SELECT')
-
-    # Merging at center for further processing
-    bpy.ops.mesh.merge(type = 'CENTER')
-    
-    # Resetting the vertex selection to origin
-    getVertices.selectVertexIndex(obj, 0)
-    
-    ## Variable for storing the current angle
-    currA = 0
-    
-    ## Variable for tracking current vertex index (eliminates expensive getCurrVert() calls)
-    currVertIdx = 0
-    
-    ## List for storing vertex indices and angles (stack for branching)
-    indexLs = []
-    
+def generateMesh(sentence, length, angle):
+    # Optimized mesh generation with UI notifications
     try:
-        ## Debugging
-        #print("\nSTEPS:\n")
-        
-        for i in range(len(str)):
-            ## Special Characters cases
-            if(str[i]=='+'):
-                currA += rads
+        obj = bpy.context.active_object
+        if obj is None or obj.type != 'MESH':
+            raise Exception("Active object must be a mesh")
+
+        # Ensure edit mode ONCE
+        if obj.mode != 'EDIT':
+            bpy.ops.object.mode_set(mode='EDIT')
+
+        bm = bmesh.from_edit_mesh(obj.data)
+
+        # Clear existing geometry
+        bm.clear()
+
+        # Create initial vertex
+        curr_vert = bm.verts.new((0.0, 0.0, 0.0))
+
+        # State
+        curr_angle = 0.0
+
+        # Stack for branching
+        stack = []
+
+        # Cache for trig
+        cos_cache = {}
+        sin_cache = {}
+
+        def get_dir(a):
+            if a not in cos_cache:
+                rad = math.radians(a)
+                cos_cache[a] = math.cos(rad)
+                sin_cache[a] = math.sin(rad)
+            return cos_cache[a], sin_cache[a]
+
+        # Main loop
+        for ch in sentence:
+            if ch == '+':
+                curr_angle += angle
                 ## Debugging
                 #print("Adding Angle")
-                
-            elif(str[i]=='-'):
-                currA -= rads
+
+            elif ch == '-':
+                curr_angle -= angle
                 ## Debugging
                 #print("Subtracting Angle")
-                
-            elif(str[i]=='['):
+
+            elif ch == '[':
                 # Pushing the current vertex index and angle to stack
-                indexLs.append((getVertices.getCurrVert(obj), currA))
-                
-            elif(str[i]==']'):
+                stack.append((curr_vert, curr_angle))
+
+            elif ch == ']':
                 # Removing the last element (vertex index and angle from stack)
-                vert, flag = cpop(indexLs)
-                
-                if(flag):
-                    ## Selecting the required vertex
-                    getVertices.selectVertexIndex(obj, vert[0])
-                    currA = vert[1]
-                        
-            elif(str[i]=='X'):
+                if stack:
+                    curr_vert, curr_angle = stack.pop()
+
+            elif ch == 'X':
                 continue
-                
-            ## Consonants for moving forward   
-            else:
-                x = round( math.cos( math.radians(currA) ), 3 ) * length
-                y = round( math.sin( math.radians(currA) ), 3 ) * length
-                z = 0
-                
-                ## TODO : DETERMINE AXIS
-                bpy.ops.mesh.extrude_region_move(TRANSFORM_OT_translate={"value":(x, y, z)})
-                
-                # Get the actual currently selected vertex after extrude
-                currVertIdx = getVertices.getCurrVert(obj)
-                
-        bpy.ops.mesh.select_all(action = 'SELECT')
-        
-        ## Removing close points/doubles
-        bpy.ops.mesh.remove_doubles()
             
-        bpy.ops.object.mode_set(mode = 'OBJECT')
+            ## Consonants for moving forward
+            else:
+                dx, dy = get_dir(curr_angle)
+
+                new_vert = bm.verts.new((
+                    curr_vert.co.x + dx * length,
+                    curr_vert.co.y + dy * length,
+                    curr_vert.co.z
+                ))
+
+                bm.edges.new((curr_vert, new_vert))
+                curr_vert = new_vert
+
+        # Cleanup
+        bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.0001)
+
+        # Update mesh once
+        bmesh.update_edit_mesh(obj.data)
+
+        bpy.ops.mesh.select_all(action='SELECT')
+
+        msg = "L-System generated successfully!"
+
+        ## Debugging
+        print(msg)
+
+        show_message(msg, "Success", 'CHECKMARK')
+
+    except Exception as e:
+        err_msg = f"Failed to generate L-System: {str(e)}"
         
-        print("Successfully Generated the Pattern!")
+        ## Debugging
+        print(err_msg)
         
-    except Exception as inst:
-        print("Failed to generate the pattern!", type(inst))
+        show_message(err_msg, "Error", 'ERROR')
