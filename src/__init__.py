@@ -18,10 +18,39 @@ from bpy.props import *
 from . import LSystems as lsystems
 #lsystems = bpy.data.texts["l-systems.py"].as_module()
 
+
 '''
 Main Code
 '''
-# GLOBAL VARIABLES
+# ======= RULE PROPERTY GROUP =======
+class LSystemRule(bpy.types.PropertyGroup):
+    # Dynamic Rule container instead of fixed rules
+    rule: bpy.props.StringProperty(
+        name = "Rule",
+        description = "Format A : AB",
+        default = "F:FX"
+    )
+
+
+# ======= HELPER FUNCTIONS =======
+def ensureRulesCount(scene, target):
+    rules = scene.rules_collection
+
+    # Add rules if needed
+    while(len(rules) < target):
+        rules.add()
+
+    # Remove extra rules
+    while(len(rules) > target):
+        rules.remove(len(rules) - 1)
+
+
+# Callback for numRules (Auto update UI)
+def updateRules(self, context):
+    ensureRulesCount(context.scene, context.scene.numRules)
+
+
+# ======= GLOBAL VARIABLES =======
 # Properties/Inputs for our add-on
 # Format : ("Name", bpy.props.<propertyName> (Int, String, Enum, Float, etc.)
 PROPS = [
@@ -36,7 +65,10 @@ PROPS = [
                                         ('sierpinskiCurve', 'Sierpinski Arrowhead Curve', 'Sierpiński arrowhead curve'),
                                         ('dragon', 'Dragon Curve', 'The dragon curve'),
                                         ('binaryTree', 'Fractal Binary Tree', 'A fractal binary tree'),
-                                        ('fractalPlant', 'Fractal Plant', 'Barnsley fern')
+                                        ('fractalPlant', 'Fractal Plant', 'Barnsley fern'),
+                                        ('tree3d', '3D Tree', '3D Tree with'),
+                                        ('bush3d', '3D Bush', '3D Bush'),
+                                        ('coral3d', '3D Coral', '3D Coral Reef Structure')
                                         ])),
 
     ("genType", bpy.props.EnumProperty( name = 'Generation Type',
@@ -49,7 +81,7 @@ PROPS = [
 
     ("axiom", bpy.props.StringProperty( name = 'Axiom',
                                         description = 'The starting point of our L-System',
-                                        default = "A" )),
+                                        default = "F" )),
                                         
     ("generations", bpy.props.IntProperty( name = 'Generations',
                                            description = 'Iterations/Generations : How many times to run the loop',
@@ -57,7 +89,8 @@ PROPS = [
     
     ("numRules", bpy.props.IntProperty( name = 'Number of Rules',
                                         description = 'The number of rules in your L-System',
-                                        default = 2, min = 1, max = 5)),
+                                        default = 1, min = 1, max = 20,
+                                        update = updateRules)),
                                         
     ("angle", bpy.props.FloatProperty( name = 'Angle',
                                         description = 'Angle by which each segment will rotate (Degrees)',
@@ -66,129 +99,96 @@ PROPS = [
     ("length", bpy.props.FloatProperty( name = 'Length',
                                         description = 'The length of each generated segment',
                                         default = 1, min = 0.05, max = 10)),
-    
-    ("rule1", bpy.props.StringProperty( name = 'Rule 1',
-                                        description = 'First rule for you L-System',
-                                        default = 'A:AB' )),
-    
-    ("rule2", bpy.props.StringProperty( name = 'Rule 2',
-                                        description = 'Second rule for you L-System',
-                                        default = 'B:A' )),
-    
-    ("rule3", bpy.props.StringProperty( name = 'Rule 3',
-                                        description = 'Third rule for you L-System',
-                                        default = 'C:B' )),
-                                        
-    ("rule4", bpy.props.StringProperty( name = 'Rule 4',
-                                        description = 'Fourth rule for you L-System',
-                                        default = 'D:BA' )),
-    
-    ("rule5", bpy.props.StringProperty( name = 'Rule 5',
-                                        description = 'Fifth rule for you L-System',
-                                        default = 'E:CD' )),
 ]
 
+
 ## Class for pre-setting values
-def presetClass(preset):
+def presetClass(context, preset):
+    scn = context.scene
+
     match preset:
+        # ======= 2D PRESETS =======
         case 'kochSnow':
-            bpy.context.scene.axiom = 'F--F--F'
-            bpy.context.scene.generations = 5
-            bpy.context.scene.numRules = 1
-            bpy.context.scene.angle = 60
-            bpy.context.scene.length = 1.0
-            bpy.context.scene.rule1 = 'F:F+F--F+F'
-            return
+            scn.axiom = 'F--F--F'
+            scn.generations = 5
+            scn.angle = 60
+            scn.length = 1.0
+            rules = ['F:F+F--F+F']
         
         case 'koch':
-            bpy.context.scene.axiom = 'F'
-            bpy.context.scene.generations = 3
-            bpy.context.scene.numRules = 1
-            bpy.context.scene.angle = 90
-            bpy.context.scene.length = 1.0
-            bpy.context.scene.rule1 = 'F:F+F-F-F+F'
-            return
+            scn.axiom = 'F'
+            scn.generations = 3
+            scn.angle = 90
+            scn.length = 1.0
+            rules = ['F:F+F-F-F+F']
             
         case 'sierpinski':
-            bpy.context.scene.axiom = 'F-G-G'
-            bpy.context.scene.generations = 4
-            bpy.context.scene.numRules = 2
-            bpy.context.scene.angle = 120
-            bpy.context.scene.length = 1.0
-            bpy.context.scene.rule1 = 'F:F-G+F+G-F'
-            bpy.context.scene.rule2 = 'G:GG'
-            return
+            scn.axiom = 'F-G-G'
+            scn.generations = 4
+            scn.angle = 120
+            scn.length = 1.0
+            rules = ['F:F-G+F+G-F', 'G:GG']
             
         case 'sierpinskiCurve':
-            bpy.context.scene.axiom = 'A'
-            bpy.context.scene.generations = 4
-            bpy.context.scene.numRules = 2
-            bpy.context.scene.angle = 60
-            bpy.context.scene.length = 1.0
-            bpy.context.scene.rule1 = 'A:B-A-B'
-            bpy.context.scene.rule2 = 'B:A+B+A'
-            return
+            scn.axiom = 'A'
+            scn.generations = 4
+            scn.angle = 60
+            scn.length = 1.0
+            rules = ['A:B-A-B', 'B:A+B+A']
         
         case 'dragon':
-            bpy.context.scene.axiom = 'F'
-            bpy.context.scene.generations = 10
-            bpy.context.scene.numRules = 2
-            bpy.context.scene.angle = 90
-            bpy.context.scene.length = 1.0
-            bpy.context.scene.rule1 = 'F:F+G'
-            bpy.context.scene.rule2 = 'G:F-G'
-            return
+            scn.axiom = 'F'
+            scn.generations = 10
+            scn.angle = 90
+            scn.length = 1.0
+            rules = ['F:F+G', 'G:F-G']
         
         case 'binaryTree':
-            bpy.context.scene.axiom = 'F'
-            bpy.context.scene.generations = 7
-            bpy.context.scene.numRules = 2
-            bpy.context.scene.angle = 45
-            bpy.context.scene.length = 1.0
-            bpy.context.scene.rule1 = 'F:G[-F]+F'
-            bpy.context.scene.rule2 = 'G:GG'
-            return
+            scn.axiom = 'F'
+            scn.generations = 7
+            scn.angle = 45
+            scn.length = 1.0
+            rules = ['F:G[-F]+F', 'G:GG']
         
         case 'fractalPlant':
-            bpy.context.scene.axiom = 'X'
-            bpy.context.scene.generations = 6
-            bpy.context.scene.numRules = 2
-            bpy.context.scene.angle = 25
-            bpy.context.scene.length = 1.0
-            bpy.context.scene.rule1 = 'X:F+[[X]-X]-F[-FX]+X'
-            bpy.context.scene.rule2 = 'F:FF'
-            return
+            scn.axiom = 'X'
+            scn.generations = 6
+            scn.angle = 25
+            scn.length = 1.0
+            rules = ['X:F+[[X]-X]-F[-FX]+X', 'F:FF']
+        
+        # ======= 3D PRESETS =======
+        case 'tree3d':
+            scn.axiom = 'F'
+            scn.generations = 5
+            scn.angle = 22.5
+            scn.length = 1.0
+            rules = ['F:F[+F][&F][-F][^F]F']
+        
+        case 'bush3d':
+            scn.axiom = 'F'
+            scn.generations = 4
+            scn.angle = 20
+            scn.length = 1.0
+            rules = ['F:F[+F]F[&F]F[-F]F[^F]']
+        
+        case 'coral3d':
+            scn.axiom = 'F'
+            scn.generations = 4
+            scn.angle = 25
+            scn.length = 1.0
+            # \\ is required for backslash (Escape character)
+            rules = ['F:F[+F]/F[\\F]&F[^F]-F']
         
         case default:
             return
         
-## Cases for passing the selected rules
-def passRulesNum(num):
-    match num:
-        case 1:
-            return [bpy.context.scene.rule1]
-        
-        case 2:
-            return [bpy.context.scene.rule1, 
-                    bpy.context.scene.rule2]
-        
-        case 3:
-            return [bpy.context.scene.rule1, 
-                    bpy.context.scene.rule2,
-                    bpy.context.scene.rule3]
-        
-        case 4:
-            return [bpy.context.scene.rule1, 
-                    bpy.context.scene.rule2,
-                    bpy.context.scene.rule3, 
-                    bpy.context.scene.rule4]
-        
-        case 5:
-            return [bpy.context.scene.rule1, 
-                    bpy.context.scene.rule2,
-                    bpy.context.scene.rule3, 
-                    bpy.context.scene.rule4, 
-                    bpy.context.scene.rule5]
+    ## Apply rules dynamically
+    scn.numRules = len(rules)
+    ensureRulesCount(scn, scn.numRules)
+
+    for i, r in enumerate(rules):
+        scn.rules_collection[i].rule = r
                     
                             
 '''
@@ -205,13 +205,15 @@ class generateLSystems(bpy.types.Operator):
         #print(params)
         
         # Pre-setting the values
-        presetClass(context.scene.presetVal)
+        if(context.scene.presetVal != 'custom'):
+            presetClass(context, context.scene.presetVal)
         
-        passRules = passRulesNum( bpy.context.scene.numRules )    
+        ## Collect rules dynamically
+        passRules = [r.rule for r in context.scene.rules_collection if r.rule.strip()]
         
         lsystems.generateLSystem( bpy.context.scene.axiom, 
                                   bpy.context.scene.generations, 
-                                  bpy.context.scene.numRules, 
+                                  len(passRules), 
                                   bpy.context.scene.angle, 
                                   bpy.context.scene.length,
                                   bpy.context.scene.genType,
@@ -241,7 +243,7 @@ class demoUI(bpy.types.Panel):
         layout.label(text="L-Systems Parameters: ")
         col = layout.column(align = True)
               
-        for(prop_name, _) in PROPS[:6]:
+        for(prop_name, _) in PROPS:
             row = col.row(align = True)
             row.prop(context.scene, prop_name)    
         
@@ -249,20 +251,29 @@ class demoUI(bpy.types.Panel):
         layout.label(text="Enter the rules in format 'A(Rule Variable):AB(Actual Rule)'")
         
         col = layout.column(align = True)
-        
         col.scale_y = 1.5
+
         ## Debugging
         #print(bpy.context.scene.numRules)
-        num_rules = min(bpy.context.scene.numRules, 5)
 
-        for i in range(num_rules):
-            prop_name, _ = PROPS[6 + i]
+        ## Dynamic Rules UI
+        for i, rule in enumerate(context.scene.rules_collection):
             row = col.row(align=True)
-            row.prop(context.scene, prop_name)
+            row.prop(rule, "rule", text=f"Rule {i+1}")
         
         col = layout.column(align = True)
         col.scale_y = 2
         col.operator("opr.generate_l_system", text="Generate System", icon = 'DISCLOSURE_TRI_RIGHT')
+
+        ## Grammar helper
+        box = layout.box()
+        box.label(text="3D Grammar:")
+        box.label(text="F/G: Forward")
+        box.label(text='X: Skip')
+        box.label(text="+ - : Z rotation")
+        box.label(text="& ^ : X rotation")
+        box.label(text="\\ / : Y rotation")
+        box.label(text="[ ] : Branching")
         
         
 '''
@@ -274,27 +285,45 @@ Don't skip this part!!
 # To auomate the installation and uninstallation of multiple scripts/classes
 # Just add the class names in this list
 CLASSES = [
+    LSystemRule,
     generateLSystems,
     demoUI
 ]    
 
+
 # To register all the classes
 def register():
+    for cls in CLASSES:
+        bpy.utils.register_class(cls)
+
     # Registering the Properties before the classes
     for (prop_name, prop_value) in PROPS:
         setattr(bpy.types.Scene, prop_name, prop_value)
         
-    for cls in CLASSES:
-        bpy.utils.register_class(cls)
+    bpy.types.Scene.rules_collection = bpy.props.CollectionProperty(type=LSystemRule)
+
+    # Delay initializing the rules
+    def init_rules():
+        if bpy.context.scene:
+            ensureRulesCount(bpy.context.scene, bpy.context.scene.numRules)
+        return None
+    
+    bpy.app.timers.register(init_rules, first_interval=0.1)
         
+
 # To unregister all the classes
 def unregister():
+    # Remove collection first
+    del bpy.types.Scene.rules_collection
+
     # Un-registering the Properties before the classes
     for(prop_name, _) in PROPS:
         delattr(bpy.types.Scene, prop_name)
-        
+    
+    # Unregister classes last (Reverse order)
     for cls in CLASSES:
         bpy.utils.unregister_class(cls)
+
         
 # Calling the register or constructor
 if __name__ == "__main__":

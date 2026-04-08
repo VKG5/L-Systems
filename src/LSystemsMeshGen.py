@@ -39,7 +39,7 @@ def generateMesh(sentence, length = 1.0, angle = 60.0):
 
         # Loop
         for ch in sentence:
-            if ch == 'F':
+            if ch == 'F' or ch == 'G':
                 direction = transform @ Vector((0, length, 0))
                 new_pos = pos + direction
 
