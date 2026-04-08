@@ -38,7 +38,15 @@ PROPS = [
                                         ('binaryTree', 'Fractal Binary Tree', 'A fractal binary tree'),
                                         ('fractalPlant', 'Fractal Plant', 'Barnsley fern')
                                         ])),
-              
+
+    ("genType", bpy.props.EnumProperty( name = 'Generation Type',
+                                        description = 'What kind of geometry to generate for the defined l-system',
+                                        items = [
+                                            ('MESH', "Mesh", "Generate as mesh"),
+                                            ('CURVE', "Curve", "Generate as curve")
+                                        ],
+                                        default = 'MESH')),
+
     ("axiom", bpy.props.StringProperty( name = 'Axiom',
                                         description = 'The starting point of our L-System',
                                         default = "A" )),
@@ -77,7 +85,7 @@ PROPS = [
     
     ("rule5", bpy.props.StringProperty( name = 'Rule 5',
                                         description = 'Fifth rule for you L-System',
-                                        default = 'E:CD' )),                                     
+                                        default = 'E:CD' )),
 ]
 
 ## Class for pre-setting values
@@ -205,7 +213,8 @@ class generateLSystems(bpy.types.Operator):
                                   bpy.context.scene.generations, 
                                   bpy.context.scene.numRules, 
                                   bpy.context.scene.angle, 
-                                  bpy.context.scene.length, 
+                                  bpy.context.scene.length,
+                                  bpy.context.scene.genType,
                                   passRules )
         
         return {'FINISHED'}

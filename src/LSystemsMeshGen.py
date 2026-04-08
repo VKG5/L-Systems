@@ -77,6 +77,18 @@ def generateMesh(sentence, length = 1.0, angle = 60.0):
         mesh.from_pydata(vertices, edges, [])
         mesh.update()
 
+        # Merging by distance
+        import bmesh
+        
+        bm = bmesh.new()
+        bm.from_mesh(mesh)
+
+        bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.0001)
+
+        bm.to_mesh(mesh)
+        bm.free()
+
+        ## Logging
         msg = "L-System generated successfully!"
 
         ## Debugging
@@ -85,6 +97,7 @@ def generateMesh(sentence, length = 1.0, angle = 60.0):
         show_message(msg, "Success", 'CHECKMARK')
 
     except Exception as e:
+        ## Logging
         err_msg = f"Failed to generate L-System: {str(e)}"
         
         ## Debugging
