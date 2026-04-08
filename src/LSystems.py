@@ -1,11 +1,20 @@
 import bpy
 import os
+from enum import Enum
 
 # Getting path
 dir = os.path.dirname(os.path.realpath(__file__))
 
 from . import LSystemsMeshGen as lsystemsGen
 #lsystemsGen = bpy.data.texts["l-systems-mesh-gen.py"].as_module()
+
+from . import LSystemsCurveGen as lsystemsGenC
+#lsystemsGenC = bpy.data.texts["l-systems-curve-gen.py"].as_module()
+
+## Types of generation available
+class generationType(Enum):
+    MESH = 1
+    CURVE = 2
 
 ## For generating the complete pattern
 def generate(sentence, generations, rules):
@@ -89,9 +98,16 @@ def lsystems(ax, gen, numR, ang, leng, ruleList):
 
 ## Getting the final axiom
 def generateLSystem(ax, gen, numR, ang, leng, ruleList):
+    # TODO : Add a selector parameter for mesh/curve generation
+    genType = 2
+
     ## Final axiom after iterating over the generations
     axiomFinal = lsystems(ax, gen, numR, ang, leng, ruleList)
     
-    lsystemsGen.generateMesh(axiomFinal, leng, ang)
+    if(genType == generationType.MESH.value):
+        lsystemsGen.generateMesh(axiomFinal, leng, ang)
+
+    elif(genType == generationType.CURVE.value):
+        lsystemsGenC.generateCurve(axiomFinal, leng, ang, 'POLY')
     
     bpy.context.scene.presetVal = 'custom'
