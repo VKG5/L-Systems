@@ -1,5 +1,6 @@
 import bpy
 import math
+from mathutils import Vector, Matrix
 
 def show_message(message="", title="Info", icon='INFO'):
     def draw(self, context):
@@ -11,68 +12,73 @@ def show_message(message="", title="Info", icon='INFO'):
 def generateMesh(sentence, length = 1.0, angle = 60.0):
     # Optimized mesh generation with UI notifications
     try:
-        obj = bpy.context.active_object
-        if obj is None or obj.type != 'MESH':
-            raise Exception("Active object must be a mesh")
-
-        # Create new mesh (avoid editing existing one)
+        # Create mesh
         mesh = bpy.data.meshes.new("LSystemMesh")
-        new_obj = bpy.data.objects.new("LSystemObject", mesh)
-        bpy.context.collection.objects.link(new_obj)
+        obj = bpy.data.objects.new("LSystemObject", mesh)
+        bpy.context.collection.objects.link(obj)
 
         ## New approach using a one shot generation instead of using BMesh
         # Geometry Data
         vertices = []
         edges = []
 
-        # State
-        curr_pos = (0.0, 0.0, 0.0)
-        curr_angle = 0.0
+        # State - Modified for 3D Generation
+        # curr_pos = (0.0, 0.0, 0.0)
+        # curr_angle = 0.0
+        pos = Vector((0.0, 0.0, 0.0))
+        transform = Matrix.Identity(3)
 
         # Stack for branching
         stack = []
 
         # Add initial vertex
-        vertices.append(curr_pos)
+        vertices.append(pos.copy())
         curr_index = 0
+
+        angle_rad = math.radians(angle)
 
         # Loop
         for ch in sentence:
-            if ch == '+':
-                curr_angle += angle
+            if ch == 'F':
+                direction = transform @ Vector((0, length, 0))
+                new_pos = pos + direction
 
-            elif ch == '-':
-                curr_angle -= angle
-
-            elif ch == '[':
-                stack.append((curr_pos, curr_angle, curr_index))
-
-            elif ch == ']':
-                if stack:
-                    curr_pos, curr_angle, curr_index = stack.pop()
-
-            elif ch == 'X':
-                continue
-
-            else:
-                dx = math.cos(math.radians(curr_angle)) * length
-                dy = math.sin(math.radians(curr_angle)) * length
-
-                new_pos = (
-                    curr_pos[0] + dx,
-                    curr_pos[1] + dy,
-                    curr_pos[2]
-                )
-
-                vertices.append(new_pos)
+                vertices.append(new_pos.copy())
                 new_index = len(vertices) - 1
 
                 edges.append((curr_index, new_index))
 
-                curr_pos = new_pos
+                pos = new_pos
                 curr_index = new_index
 
-        # Create mesh in one shot
+            elif ch == '+':  # Yaw (Z axis)
+                transform = transform @ Matrix.Rotation(angle_rad, 3, 'Z')
+
+            elif ch == '-':
+                transform = transform @ Matrix.Rotation(-angle_rad, 3, 'Z')
+
+            elif ch == '&':  # Pitch down (X axis)
+                transform = transform @ Matrix.Rotation(angle_rad, 3, 'X')
+
+            elif ch == '^':  # Pitch up
+                transform = transform @ Matrix.Rotation(-angle_rad, 3, 'X')
+
+            elif ch == '\\':  # Roll left (Y axis)
+                transform = transform @ Matrix.Rotation(angle_rad, 3, 'Y')
+
+            elif ch == '/':  # Roll right
+                transform = transform @ Matrix.Rotation(-angle_rad, 3, 'Y')
+
+            elif ch == '[':
+                stack.append((pos.copy(), transform.copy(), curr_index))
+
+            elif ch == ']':
+                if stack:
+                    pos, transform, curr_index = stack.pop()
+
+            else:
+                continue
+
         mesh.from_pydata(vertices, edges, [])
         mesh.update()
 

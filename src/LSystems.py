@@ -70,10 +70,14 @@ def lsystems(ax, gen, numR, ang, leng, ruleList):
     F/G : Go forward by some number of units
     B : Go backward by some number of units (TODO)
     X : Doesn't do anything, acts as a placeholder
-    - : Turn left by some degrees
-    + : Turn right by some degrees
-    [ : Corresponds to saving the current values for position and angle
-    ] : Executing the saved values in '['
+    + : Rotate around Z axis (Yaw left)
+    - : Rotate around Z axis (Yaw right)
+    & : Rotate around X axis (Pitch down)
+    ^ : Rotate around X axis (Pitch up)
+    \ : Rotate around Y axis (Roll left)
+    / : Rotate around Y axis (Roll right)
+    [ : Push current state (position + orientation)
+    ] : Pop state (restore position + orientation)
     
     (We’ll turn by 60 degrees by default)
     '''

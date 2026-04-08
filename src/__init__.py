@@ -253,8 +253,11 @@ class demoUI(bpy.types.Panel):
         col.scale_y = 1.5
         ## Debugging
         #print(bpy.context.scene.numRules)
-        for(prop_name, _) in PROPS[6 : 6+(bpy.context.scene.numRules)]:
-            row = col.row(align = True)
+        num_rules = min(bpy.context.scene.numRules, 5)
+
+        for i in range(num_rules):
+            prop_name, _ = PROPS[6 + i]
+            row = col.row(align=True)
             row.prop(context.scene, prop_name)
         
         col = layout.column(align = True)
