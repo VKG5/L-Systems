@@ -137,11 +137,11 @@ def presetClass(context, preset):
             rules = ['F:F-G+F+G-F', 'G:GG']
             
         case 'sierpinskiCurve':
-            scn.axiom = 'A'
+            scn.axiom = 'F'
             scn.generations = 4
             scn.angle = 60
             scn.length = 1.0
-            rules = ['A:B-A-B', 'B:A+B+A']
+            rules = ['F:G-F-G', 'G:F+G+F']
         
         case 'dragon':
             scn.axiom = 'F'
