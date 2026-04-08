@@ -1,5 +1,4 @@
 import bpy
-import bmesh
 import math
 
 def show_message(message="", title="Info", icon='INFO'):
