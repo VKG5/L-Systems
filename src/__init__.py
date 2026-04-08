@@ -50,26 +50,33 @@ def updateRules(self, context):
     ensureRulesCount(context.scene, context.scene.numRules)
 
 
+## Callback for updating presets
+def updatePreset(self, context):
+    if context.scene.presetVal != 'custom':
+        presetClass(context, context.scene.presetVal)
+
+
 # ======= GLOBAL VARIABLES =======
 # Properties/Inputs for our add-on
 # Format : ("Name", bpy.props.<propertyName> (Int, String, Enum, Float, etc.)
 PROPS = [
     ## Presets
     ("presetVal", bpy.props.EnumProperty( name = 'Presets ',
-                                      description = 'Some presets for you to play around with',
-                                      items = [
-                                        ('custom', 'None', 'Custom Pattern'),
-                                        ('kochSnow', 'Koch Snowflake', 'A variant of the Koch curve to create a snowflake'),
-                                        ('koch', 'Koch Curve', 'A variant of the Koch curve which uses only right angles'),
-                                        ('sierpinski', 'Sierpinski Triangle', 'The Sierpinski triangle'),
-                                        ('sierpinskiCurve', 'Sierpinski Arrowhead Curve', 'Sierpiński arrowhead curve'),
-                                        ('dragon', 'Dragon Curve', 'The dragon curve'),
-                                        ('binaryTree', 'Fractal Binary Tree', 'A fractal binary tree'),
-                                        ('fractalPlant', 'Fractal Plant', 'Barnsley fern'),
-                                        ('tree3d', '3D Tree', '3D Tree with'),
-                                        ('bush3d', '3D Bush', '3D Bush'),
-                                        ('coral3d', '3D Coral', '3D Coral Reef Structure')
-                                        ])),
+                                          description = 'Some presets for you to play around with',
+                                          items = [
+                                            ('custom', 'None', 'Custom Pattern'),
+                                            ('kochSnow', 'Koch Snowflake', 'A variant of the Koch curve to create a snowflake'),
+                                            ('koch', 'Koch Curve', 'A variant of the Koch curve which uses only right angles'),
+                                            ('sierpinski', 'Sierpinski Triangle', 'The Sierpinski triangle'),
+                                            ('sierpinskiCurve', 'Sierpinski Arrowhead Curve', 'Sierpiński arrowhead curve'),
+                                            ('dragon', 'Dragon Curve', 'The dragon curve'),
+                                            ('binaryTree', 'Fractal Binary Tree', 'A fractal binary tree'),
+                                            ('fractalPlant', 'Fractal Plant', 'Barnsley fern'),
+                                            ('tree3d', '3D Tree', '3D Tree with'),
+                                            ('bush3d', '3D Bush', '3D Bush'),
+                                            ('coral3d', '3D Coral', '3D Coral Reef Structure')
+                                            ],
+                                         update=updatePreset)),
 
     ("genType", bpy.props.EnumProperty( name = 'Generation Type',
                                         description = 'What kind of geometry to generate for the defined l-system',
@@ -178,7 +185,7 @@ def presetClass(context, preset):
             scn.angle = 25
             scn.length = 1.0
             # \\ is required for backslash (Escape character)
-            rules = ['F:F[+F]/F[\\F]&F[^F]-F']
+            rules = ['F:F[+F]/F[\\\\F]&F[^F]-F']
         
         case default:
             return
@@ -204,9 +211,9 @@ class generateLSystems(bpy.types.Operator):
         ## Debugging
         #print(params)
         
-        # Pre-setting the values
-        if(context.scene.presetVal != 'custom'):
-            presetClass(context, context.scene.presetVal)
+        # Pre-setting the values, handled in callback function
+        # if(context.scene.presetVal != 'custom'):
+        #     presetClass(context, context.scene.presetVal)
         
         ## Collect rules dynamically
         passRules = [r.rule for r in context.scene.rules_collection if r.rule.strip()]
